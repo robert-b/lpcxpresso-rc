@@ -1,1 +1,1 @@
-Cool project for R/C
+Cool project for R/C, telemetry and engine control
