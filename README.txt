@@ -9,3 +9,8 @@ History
 	- read Graupner HoTT SUM signal, connect SUM signal to P1[18] and P1[19]
 	- generate trigger signal for oscilloscope at P1[20]
 	- generate threshold signal for channel 1 to show some action by switching the LED (P0[22])
+	
+17.11.2011
+	- corrected
+	- added doxygen documentation
+	- 

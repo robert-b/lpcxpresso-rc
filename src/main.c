@@ -15,13 +15,25 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-//
-// Purpose
-/**
-	- read Graupner HoTT SUM signal, connect SUM signal to P1[18] and P1[19]
-	- generate trigger signal for oscilloscope at P1[20]
-	- generate threshold signal for channel 1 to show some action
-*/
+
+/// @mainpage lpcxpresso-rc
+///
+/// Project description
+///
+/// Example: Read Graupner HoTT SUM signal and attach LED to channel 1
+///
+/// <img src="tekway45_6.gif" alt="Screenshot">
+///
+/// @author Cord Johannmeyer
+
+
+/// \file main.c
+/// Purpose
+///
+///	- read Graupner HoTT SUM signal, connect SUM signal to P1[18]
+///	- generate trigger signal for oscilloscope at P1[20]
+///	- generate threshold signal for channel 1 to show some action
+///
 
 #ifdef __USE_CMSIS
 #include "LPC17xx.h"
@@ -30,9 +42,9 @@
 #include <cr_section_macros.h>
 #include <NXP/crp.h>
 
-// Variable to store CRP value in. Will be placed automatically
-// by the linker when "Enable Code Read Protect" selected.
-// See crp.h header for more information
+/// Variable to store CRP value in.
+/// Will be placed automatically by the linker when "Enable Code Read Protect" selected.<br>
+/// See crp.h header for more information
 __CRP const unsigned int CRP_WORD = CRP_NO_CRP ;
 
 #include <stdio.h>
@@ -43,13 +55,12 @@ __CRP const unsigned int CRP_WORD = CRP_NO_CRP ;
 // other definitions and declarations
 #define LED (1<<22)
 #define TRIG (1<<20)
+#define MAX_CHANNELS 12
 
-uint32_t volatile Timer1CaptureValue = 0;
-uint32_t volatile Timer1CaptureLowTime[32];		/// not used, for information only
-uint32_t volatile Timer1CaptureHighTime[32];	/// receiver channel 1 to n
-uint32_t volatile lowIndex = 0;
-uint32_t volatile highIndex = 0;
-uint32_t volatile max = 0;
+uint32_t volatile Timer1CaptureValue = 0;		///< stores Timer1 value at each capture event
+uint32_t volatile RecvChannel[MAX_CHANNELS];	///< receiver channel 1 to n
+uint32_t volatile chIndex = 0;				///< index for Timer1CaptureHighTime array
+uint32_t volatile max = 0;						///< number of captured pulses per cycle
 
 /************************** PRIVATE FUNCTIONS *************************/
 void setTimer1Capture(void);
@@ -57,53 +68,40 @@ void setTimer1Capture(void);
 /* Interrupt service routines */
 void TIMER1_IRQHandler(void);
 
-/*********************************************************************//**
- * @brief		TIMER1 interrupt handler sub-routine
- * @param[in]	None
- * @return 		None
- **********************************************************************/
+///////////////////////////////////////////////////////////////////////////////
+/// @brief		TIMER1 interrupt handler sub-routine
+/// @param[in]	None
+/// @return 	None
+///////////////////////////////////////////////////////////////////////////////
 void TIMER1_IRQHandler(void)
 {
 	if (TIM_GetIntCaptureStatus(LPC_TIM1,0))
 	{
 		TIM_ClearIntCapturePending(LPC_TIM1,0);
 		uint32_t capt = TIM_GetCaptureValue(LPC_TIM1,0);
-		Timer1CaptureLowTime[lowIndex] = capt - Timer1CaptureValue;
-		Timer1CaptureValue = capt;
-		lowIndex++;
-		if(Timer1CaptureLowTime[lowIndex] > 5000)
-		{
-			lowIndex = 0;
-			highIndex = 0; }
-		else
-		{
-			lowIndex++;
+		uint32_t diff = capt - Timer1CaptureValue;
+		if(diff > 5000) {
+			GPIO_SetValue(1, TRIG);
+			chIndex = 0;
 		}
-	}
-	else if (TIM_GetIntCaptureStatus(LPC_TIM1,1)){
-		TIM_ClearIntCapturePending(LPC_TIM1,1);
-		uint32_t capt = TIM_GetCaptureValue(LPC_TIM1,1);
-		Timer1CaptureHighTime[highIndex] = capt - Timer1CaptureValue;
-		Timer1CaptureValue = capt;
-		if(Timer1CaptureHighTime[highIndex] > 5000)
-		{
-			max = highIndex;
-			lowIndex = 0;
-			highIndex = 0; }
-		else
-		{
-			highIndex++;
+		else {
+			if(chIndex < MAX_CHANNELS) {
+				RecvChannel[chIndex] = diff;
+			}
+			chIndex++;
+			GPIO_ClearValue(1, TRIG);
 		}
+		Timer1CaptureValue = capt;
 	}
-	if(lowIndex == 0) GPIO_SetValue(1, TRIG);
-	else GPIO_ClearValue(1, TRIG);
 }
 
-/*********************************************************************//**
- * @brief		set up TIMER1 capture register
- * @param[in]	None
- * @return 		None
- **********************************************************************/
+///////////////////////////////////////////////////////////////////////////////
+/// @brief	set up TIMER1 capture register.
+///
+/// configures P1.18 as CAP1.0 | LPC1769 (LQFP100) Pin 32 | LPCXpresso PAD1 (not linked to base board)<br>
+/// @param[in]	None
+/// @return 	None
+///////////////////////////////////////////////////////////////////////////////
 void setTimer1Capture(void)
 {
     TIM_CAPTURECFG_Type TIM_CaptureConfigStruct;
@@ -117,33 +115,23 @@ void setTimer1Capture(void)
 	PinCfg.Pinnum = 18;
 	PINSEL_ConfigPin(&PinCfg);
 
-	//Config P1.19 as CAP1.1 | LPC1769 (LQFP100) Pin 33 | LPCXpresso PAD2 (not linked to base board)
-	PinCfg.Pinnum = 19;
-	PINSEL_ConfigPin(&PinCfg);
-
 	TIM_TIMERCFG_Type TIM_ConfigStruct;
 	TIM_ConfigStruct.PrescaleOption = TIM_PRESCALE_USVAL;
 	TIM_ConfigStruct.PrescaleValue	= 1;
 	TIM_Init(LPC_TIM1, TIM_TIMER_MODE, &TIM_ConfigStruct);
 
     TIM_CaptureConfigStruct.CaptureChannel = 0; // use channel 0, CAPn.0
-    TIM_CaptureConfigStruct.RisingEdge = ENABLE; // Enable capture on CAPn.0 rising edge
-    TIM_CaptureConfigStruct.FallingEdge = DISABLE; // Disable capture on CAPn.0 falling edge
-    TIM_CaptureConfigStruct.IntOnCaption = ENABLE; // Generate capture interrupt
-    TIM_ConfigCapture(LPC_TIM1, &TIM_CaptureConfigStruct);
-
-    TIM_CaptureConfigStruct.CaptureChannel = 1; // use channel 1, CAPn.0
-    TIM_CaptureConfigStruct.RisingEdge = DISABLE; // Disable capture on CAPn.0 rising edge
-    TIM_CaptureConfigStruct.FallingEdge = ENABLE; // Enable capture on CAPn.0 falling edge
+    TIM_CaptureConfigStruct.RisingEdge = DISABLE; // Enable capture on CAPn.0 rising edge
+    TIM_CaptureConfigStruct.FallingEdge = ENABLE; // Disable capture on CAPn.0 falling edge
     TIM_CaptureConfigStruct.IntOnCaption = ENABLE; // Generate capture interrupt
     TIM_ConfigCapture(LPC_TIM1, &TIM_CaptureConfigStruct);
 
     TIM_ResetCounter(LPC_TIM1);
 }
 
-/*********************************************************************//**
- * @brief		the main program
- **********************************************************************/
+///////////////////////////////////////////////////////////////////////////////
+/// @brief		the main program.
+///////////////////////////////////////////////////////////////////////////////
 int main(void) {
 	
 	GPIO_SetDir(0, LED, 1);			// LEDs on PORT0 defined as Output
@@ -158,15 +146,21 @@ int main(void) {
     // Enter an infinite loop
     static volatile int i = 0 ;
 	while(1) {
-		if(Timer1CaptureHighTime[0] > 1000) GPIO_SetValue(0, LED);
+
+		// attach LED to channel 1
+		if(RecvChannel[0] > 1500) GPIO_SetValue(0, LED);
 		else GPIO_ClearValue(0, LED);
-//		int j;
-//		for(j=0; j<=max; j++) {
-//			printf("ch%d = %d ", j+1, Timer1CaptureHighTime[j]);
-//		}
-//		printf("\n");
+
+		if(i==50) {
+			int j;
+			for(j=0; j<MAX_CHANNELS; j++) {
+				printf("ch%d = %d ", j+1, RecvChannel[j]);
+			}
+			printf("\n");
+			i=0;
+		}
 //		printf("LowTime = %d  HighTime = %d\n", Timer1CaptureLowTime[0], Timer1CaptureHighTime[0]);
-//		Timer0_Wait(1000);
+		Timer0_Wait(100);
 		i++ ;
 	}
 	return 0 ;
