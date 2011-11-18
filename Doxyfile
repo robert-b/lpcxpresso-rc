@@ -52,7 +52,7 @@ PROJECT_LOGO =
 # If a relative path is entered, it will be relative to the location 
 # where doxygen was started. If left blank the current directory will be used.
 
-OUTPUT_DIRECTORY = "Y:/My Documents/LPCXpresso_4.1.0_190/workspace_lpc/lpcxpresso-rc/doyxgen"
+OUTPUT_DIRECTORY = doyxgen"
 
 # If the CREATE_SUBDIRS tag is set to YES, then doxygen will create 
 # 4096 sub-directories (in 2 levels) under the output directory of each output 
@@ -628,7 +628,7 @@ WARN_LOGFILE =
 # directories like "/usr/src/myproject". Separate the files or directories 
 # with spaces.
 
-INPUT = "Y:/My Documents/LPCXpresso_4.1.0_190/workspace_lpc/lpcxpresso-rc/src"
+INPUT = src 
 
 # This tag can be used to specify the character encoding of the source files 
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding, which is 
@@ -659,7 +659,7 @@ RECURSIVE = NO
 # subdirectory from a directory tree whose root is specified with the INPUT tag. 
 # Note that relative paths are relative to directory from which doxygen is run.
 
-EXCLUDE = src\cr_startup_lpc176x.c 
+EXCLUDE = src\cr_startup_lpc176x.c
 
 # The EXCLUDE_SYMLINKS tag can be used select whether or not files or 
 # directories that are symbolic links (a Unix file system feature) are excluded 
