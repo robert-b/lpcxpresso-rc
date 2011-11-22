@@ -51,83 +51,12 @@ __CRP const unsigned int CRP_WORD = CRP_NO_CRP ;
 #include "lpc17xx_pinsel.h"
 #include "lpc17xx_gpio.h"
 #include "lpc17xx_timer.h"
+#include "SumReader.h"
+#include "ServoCtrl.h"
 
 // other definitions and declarations
 #define LED (1<<22)
-#define TRIG (1<<20)
-#define MAX_CHANNELS 12
 
-uint32_t volatile Timer1CaptureValue = 0;		///< stores Timer1 value at each capture event
-uint32_t volatile RecvChannel[MAX_CHANNELS];	///< receiver channel 1 to n
-uint32_t volatile chIndex = 0;				///< index for Timer1CaptureHighTime array
-uint32_t volatile max = 0;						///< number of captured pulses per cycle
-
-/************************** PRIVATE FUNCTIONS *************************/
-void setTimer1Capture(void);
-
-/* Interrupt service routines */
-void TIMER1_IRQHandler(void);
-
-///////////////////////////////////////////////////////////////////////////////
-/// @brief		TIMER1 interrupt handler sub-routine
-/// @param[in]	None
-/// @return 	None
-///////////////////////////////////////////////////////////////////////////////
-void TIMER1_IRQHandler(void)
-{
-	if (TIM_GetIntCaptureStatus(LPC_TIM1,0))
-	{
-		TIM_ClearIntCapturePending(LPC_TIM1,0);
-		uint32_t capt = TIM_GetCaptureValue(LPC_TIM1,0);
-		uint32_t diff = capt - Timer1CaptureValue;
-		if(diff > 5000) {
-			GPIO_SetValue(1, TRIG);
-			chIndex = 0;
-		}
-		else {
-			if(chIndex < MAX_CHANNELS) {
-				RecvChannel[chIndex] = diff;
-			}
-			chIndex++;
-			GPIO_ClearValue(1, TRIG);
-		}
-		Timer1CaptureValue = capt;
-	}
-}
-
-///////////////////////////////////////////////////////////////////////////////
-/// @brief	set up TIMER1 capture register.
-///
-/// configures P1.18 as CAP1.0 | LPC1769 (LQFP100) Pin 32 | LPCXpresso PAD1 (not linked to base board)<br>
-/// @param[in]	None
-/// @return 	None
-///////////////////////////////////////////////////////////////////////////////
-void setTimer1Capture(void)
-{
-    TIM_CAPTURECFG_Type TIM_CaptureConfigStruct;
-
-	//Config P1.18 as CAP1.0 | LPC1769 (LQFP100) Pin 32 | LPCXpresso PAD1 (not linked to base board)
-	PINSEL_CFG_Type PinCfg;
-	PinCfg.Funcnum = 3;
-	PinCfg.OpenDrain = 0;
-	PinCfg.Pinmode = 0;
-	PinCfg.Portnum = 1;
-	PinCfg.Pinnum = 18;
-	PINSEL_ConfigPin(&PinCfg);
-
-	TIM_TIMERCFG_Type TIM_ConfigStruct;
-	TIM_ConfigStruct.PrescaleOption = TIM_PRESCALE_USVAL;
-	TIM_ConfigStruct.PrescaleValue	= 1;
-	TIM_Init(LPC_TIM1, TIM_TIMER_MODE, &TIM_ConfigStruct);
-
-    TIM_CaptureConfigStruct.CaptureChannel = 0; // use channel 0, CAPn.0
-    TIM_CaptureConfigStruct.RisingEdge = DISABLE; // Enable capture on CAPn.0 rising edge
-    TIM_CaptureConfigStruct.FallingEdge = ENABLE; // Disable capture on CAPn.0 falling edge
-    TIM_CaptureConfigStruct.IntOnCaption = ENABLE; // Generate capture interrupt
-    TIM_ConfigCapture(LPC_TIM1, &TIM_CaptureConfigStruct);
-
-    TIM_ResetCounter(LPC_TIM1);
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 /// @brief		the main program.
@@ -135,32 +64,34 @@ void setTimer1Capture(void)
 int main(void) {
 	
 	GPIO_SetDir(0, LED, 1);			// LEDs on PORT0 defined as Output
-	GPIO_SetDir(1, TRIG, 1);		// Trigger signal for oscilloscope
+	GPIO_SetDir(TRIG_PORT, TRIG_PIN, 1);	// Trigger signal for oscilloscope
+	GPIO_SetValue(TRIG_PORT, TRIG_PIN);
 
-    setTimer1Capture();
+    initSumReader();
+    initServoCtrl();
 
-    NVIC_SetPriority(TIMER1_IRQn, ((0x01 << 3) | 0x01)); // preemption = 1, sub-priority = 1
-    NVIC_EnableIRQ(TIMER1_IRQn); // Enable interrupt for timer 1
-    TIM_Cmd(LPC_TIM1,ENABLE);
+    struct Servo_t servo1 = {1,1,20,1600};
+    addServo(1, servo1);
 
     // Enter an infinite loop
     static volatile int i = 0 ;
 	while(1) {
 
 		// attach LED to channel 1
-		if(RecvChannel[0] > 1500) GPIO_SetValue(0, LED);
+		if(Recv.channel[0] > 1500) GPIO_SetValue(0, LED);
 		else GPIO_ClearValue(0, LED);
 
-		if(i==50) {
-			int j;
-			for(j=0; j<MAX_CHANNELS; j++) {
-				printf("ch%d = %d ", j+1, RecvChannel[j]);
-			}
-			printf("\n");
-			i=0;
-		}
-//		printf("LowTime = %d  HighTime = %d\n", Timer1CaptureLowTime[0], Timer1CaptureHighTime[0]);
-		Timer0_Wait(100);
+		ServoArray.channel[0].pulseLength = Recv.channel[1];
+
+//		if(i==5000) {
+//			int j;
+//			for(j=0; j<MAX_CHANNELS; j++) {
+//				printf("ch%d = %d ", j+1, Recv.channel[j]);
+//			}
+//			printf("\n");
+//			i=0;
+//		}
+		Timer0_Wait(10);
 		i++ ;
 	}
 	return 0 ;
