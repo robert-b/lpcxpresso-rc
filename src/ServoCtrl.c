@@ -18,12 +18,8 @@
 
 ///
 /// \file ServoCtrl.c
-/// \brief
-/// enter brief description of ServoCtrl.c here
 /// \date 22.11.2011
 /// \author cord
-/// \details
-/// enter detailed description here
 
 #ifdef __USE_CMSIS
 #include "LPC17xx.h"
@@ -35,19 +31,20 @@
 
 volatile struct ServoCtrl_t ServoArray;
 
-
 ///////////////////////////////////////////////////////////////////////////////
-/// @brief		TIMER2 interrupt handler sub-routine
-/// @param[in]	None
-/// @return 	None
+/// \brief		TIMER2 interrupt handler sub-routine
+/// \return 	None
 ///////////////////////////////////////////////////////////////////////////////
 void TIMER2_IRQHandler(void)
 {
 	if(TIM_GetIntStatus(LPC_TIM2, TIM_MR0_INT)) {	// MR0 Interrupt
 		TIM_ClearIntPending(LPC_TIM2, TIM_MR0_INT);
-		GPIO_ClearValue(ServoArray.channel[0].port, (1<<ServoArray.channel[0].bit));
-//		GPIO_SetValue(ServoArray.channel[0].port, (1<<ServoArray.channel[0].bit));
-//		GPIO_ClearValue(ServoArray.channel[0].port, (1<<ServoArray.channel[0].bit));
+		GPIO_ClearValue(ServoArray.channel[ServoArray.idx].port, (1<<ServoArray.channel[ServoArray.idx].bit));
+		if(ServoArray.idx < ServoArray.maxIndex) {
+			ServoArray.idx++;
+			LPC_TIM2->MR0 = LPC_TIM2->TC + ServoArray.channel[ServoArray.idx].pulseLength;
+			GPIO_SetValue(ServoArray.channel[ServoArray.idx].port, (1<<ServoArray.channel[ServoArray.idx].bit));
+		}
 	}
 	else if(TIM_GetIntStatus(LPC_TIM2, TIM_MR1_INT)) {	// MR1 Interrupt
 		TIM_ClearIntPending(LPC_TIM2, TIM_MR1_INT);
@@ -65,7 +62,7 @@ void TIMER2_IRQHandler(void)
 /// \param[in]  servo   servo description
 /// \return 	None
 ///////////////////////////////////////////////////////////////////////////////
-uint8_t addServo(uint8_t index, struct Servo_t servo)
+uint8_t setServo(uint8_t index, struct Servo_t servo)
 {
 	if(index > 0 && index<=MAX_SERVOS) {
 		GPIO_SetDir(servo.port, (1<<servo.bit), 1);	// Trigger signal for oscilloscope
@@ -81,10 +78,9 @@ uint8_t addServo(uint8_t index, struct Servo_t servo)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-/// @brief	set up TIMER2 match register.
+/// \brief	set up TIMER2 match register.
 ///
-/// @param[in]	None
-/// @return 	None
+/// \return 	None
 ///////////////////////////////////////////////////////////////////////////////
 
 void initServoCtrl(void)

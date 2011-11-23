@@ -19,11 +19,11 @@
 ///
 /// \file ServoCtrl.h
 /// \brief
-/// enter brief description of ServoCtrl.h here
+/// Servo driver module
 /// \date 22.11.2011
 /// \author cord
 /// \details
-/// enter detailed description here
+/// ServoCtrl uses TIMER2 to process multiple servo outputs
 
 #ifndef SERVOCTRL_H_
 #define SERVOCTRL_H_
@@ -33,15 +33,15 @@
 #include "lpc17xx_timer.h"
 
 /// maximum number of servo output signals
-#define MAX_SERVOS 4
+#define MAX_SERVOS 8
 
+/// Servo_t specifies port and pulse length for a single servo output
 struct Servo_t {
-	uint8_t inpChannel;
 	uint8_t port;
 	uint8_t bit;
 	uint32_t pulseLength;
 };
-/// servo signal pulse length array
+/// servo specification array
 struct ServoCtrl_t {
 	struct Servo_t channel[MAX_SERVOS];	///< servo channel 1 to n
 	uint32_t maxIndex;					///< number of servos
@@ -56,6 +56,6 @@ extern volatile struct ServoCtrl_t ServoArray;
 
 void initServoCtrl(void);
 
-uint8_t addServo(uint8_t index, struct Servo_t servo);
+uint8_t setServo(uint8_t index, struct Servo_t servo);
 
 #endif /* SERVOCTRL_H_ */

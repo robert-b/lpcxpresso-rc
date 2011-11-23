@@ -1,7 +1,7 @@
 ///
 /// \file SumReader.h
 /// \brief
-/// Receiver sum signal module
+/// Receiver sum signal reader module
 /// \date 20.11.2011
 /// \author cord
 /// \details

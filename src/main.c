@@ -70,8 +70,11 @@ int main(void) {
     initSumReader();
     initServoCtrl();
 
-    struct Servo_t servo1 = {1,1,20,1600};
-    addServo(1, servo1);
+    // define servo outputs
+    struct Servo_t servoSpec = {1,20,1500};  	/// Servo channel 1 on P1[20]
+    setServo(1, servoSpec);
+    servoSpec.bit = 21;  						/// Servo channel 2 on P1[21]
+    setServo(2, servoSpec);
 
     // Enter an infinite loop
     static volatile int i = 0 ;
@@ -81,7 +84,9 @@ int main(void) {
 		if(Recv.channel[0] > 1500) GPIO_SetValue(0, LED);
 		else GPIO_ClearValue(0, LED);
 
-		ServoArray.channel[0].pulseLength = Recv.channel[1];
+		// mix servo channels to show some action
+		ServoArray.channel[0].pulseLength = (Recv.channel[0] + Recv.channel[1]) / 2;
+		ServoArray.channel[1].pulseLength = (Recv.channel[2] + Recv.channel[3]) / 2;
 
 //		if(i==5000) {
 //			int j;
