@@ -11,6 +11,11 @@ History
 	- generate threshold signal for channel 1 to show some action by switching the LED (P0[22])
 	
 17.11.2011
-	- corrected
+	- new capture method to get correct pulse length
 	- added doxygen documentation
-	- 
+
+23.11.2011
+	- process up to 8 servo output channels
+
+27.11.2011
+	- added RPM module
