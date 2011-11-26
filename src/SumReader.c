@@ -12,8 +12,11 @@
 
 #include "SumReader.h"
 
-uint32_t volatile Timer1CaptureValue;		///< stores Timer1 value at each capture event
+uint32_t volatile Timer1Capture0Value;		///< stores Timer1 value at each capture 0 event
+//uint32_t volatile Timer1Capture1Value;		///< stores Timer1 value at each capture 1 event
+//uint32_t volatile RPMCycleTime;				///< stores captured cycle time in us for RPM measurement
 volatile struct RecvSignal_t Recv;
+uint32_t volatile tim_cr0_int_error;
 
 ///////////////////////////////////////////////////////////////////////////////
 /// @brief		TIMER1 interrupt handler sub-routine
@@ -22,27 +25,35 @@ volatile struct RecvSignal_t Recv;
 ///////////////////////////////////////////////////////////////////////////////
 void TIMER1_IRQHandler(void)
 {
-	if (TIM_GetIntCaptureStatus(LPC_TIM1,0))
-	{
-		TIM_ClearIntCapturePending(LPC_TIM1,0);
+//	if (TIM_GetIntCaptureStatus(LPC_TIM1,0))
+//	{
+//		TIM_ClearIntCapturePending(LPC_TIM1,0);
+	if(TIM_GetIntStatus(LPC_TIM1, TIM_CR0_INT))	{
+		TIM_ClearIntPending(LPC_TIM1, TIM_CR0_INT);
 		uint32_t capt = TIM_GetCaptureValue(LPC_TIM1,0);
-		uint32_t diff = capt - Timer1CaptureValue;
+		uint32_t diff = capt - Timer1Capture0Value;
 		if(diff > 5000) {
-//			GPIO_SetValue(TRIG_PORT, TRIG_PIN);
+			if(Recv.index != 12) {
+				GPIO_SetValue(TRIG_PORT, TRIG_PIN);
+				tim_cr0_int_error++;
+				GPIO_ClearValue(TRIG_PORT, TRIG_PIN);
+			}
 			Recv.index = 0;
-//			volatile uint32_t match = Timer1CaptureValue + 1500;
-//			LPC_TIM1->MR0 = match;
-//			LPC_TIM2->MR0 = LPC_TIM2->TC + 1500;
 		}
 		else {
-			if(Recv.index < MAX_CHANNELS) {
+			if(Recv.index < MAX_CHANNELS && diff > 500 && diff < 2500) {
 				Recv.channel[Recv.index] = diff;
 			}
 			Recv.index++;
-//			GPIO_ClearValue(TRIG_PORT, TRIG_PIN);
 		}
-		Timer1CaptureValue = capt;
+		Timer1Capture0Value = capt;
 	}
+//	else if(TIM_GetIntStatus(LPC_TIM1, TIM_CR1_INT)) {
+//		TIM_ClearIntPending(LPC_TIM1, TIM_CR1_INT);
+//		uint32_t capt = TIM_GetCaptureValue(LPC_TIM1,1);
+//		RPMCycleTime = capt - Timer1Capture1Value;
+//		Timer1Capture1Value = capt;
+//	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -56,6 +67,7 @@ void TIMER1_IRQHandler(void)
 void initSumReader(void)
 {
 	Recv.index = 0;
+	tim_cr0_int_error = 0;
 
 	//Config P1.18 as CAP1.0 | LPC1769 (LQFP100) Pin 32 | LPCXpresso PAD1 (not linked to base board)
 	PINSEL_CFG_Type PinCfg;

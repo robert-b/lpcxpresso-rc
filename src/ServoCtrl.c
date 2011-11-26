@@ -99,7 +99,7 @@ void initServoCtrl(void)
 	TIM_MatchConfigStruct.StopOnMatch = DISABLE;
 	TIM_MatchConfigStruct.IntOnMatch = ENABLE;
 	TIM_MatchConfigStruct.MatchValue = 5000;
-	TIM_MatchConfigStruct.ExtMatchOutputType = 0;
+	TIM_MatchConfigStruct.ExtMatchOutputType = TIM_EXTMATCH_NOTHING;
 	TIM_ConfigMatch(LPC_TIM2, &TIM_MatchConfigStruct);
 
 	TIM_MatchConfigStruct.MatchChannel = 1;
@@ -107,7 +107,7 @@ void initServoCtrl(void)
 	TIM_MatchConfigStruct.StopOnMatch = DISABLE;
 	TIM_MatchConfigStruct.IntOnMatch = ENABLE;
 	TIM_MatchConfigStruct.MatchValue = 20000;
-	TIM_MatchConfigStruct.ExtMatchOutputType = 0;
+	TIM_MatchConfigStruct.ExtMatchOutputType = TIM_EXTMATCH_NOTHING;
 	TIM_ConfigMatch(LPC_TIM2, &TIM_MatchConfigStruct);
 
     TIM_ResetCounter(LPC_TIM2);

@@ -53,10 +53,11 @@ __CRP const unsigned int CRP_WORD = CRP_NO_CRP ;
 #include "lpc17xx_timer.h"
 #include "SumReader.h"
 #include "ServoCtrl.h"
+#include "RPMReader.h"
 
 // other definitions and declarations
 #define LED (1<<22)
-
+extern uint32_t volatile RPMCycleTime;				///< stores captured cycle time in us for RPM measurement
 
 ///////////////////////////////////////////////////////////////////////////////
 /// @brief		the main program.
@@ -69,6 +70,7 @@ int main(void) {
 
     initSumReader();
     initServoCtrl();
+    initRPMReader();
 
     // define servo outputs
     struct Servo_t servoSpec = {1,20,1500};  	/// Servo channel 1 on P1[20]
@@ -88,14 +90,15 @@ int main(void) {
 		ServoArray.channel[0].pulseLength = (Recv.channel[0] + Recv.channel[1]) / 2;
 		ServoArray.channel[1].pulseLength = (Recv.channel[2] + Recv.channel[3]) / 2;
 
-//		if(i==5000) {
+		if(i==500) {
 //			int j;
 //			for(j=0; j<MAX_CHANNELS; j++) {
 //				printf("ch%d = %d ", j+1, Recv.channel[j]);
 //			}
-//			printf("\n");
-//			i=0;
-//		}
+			printf(" RPM = %d", 60000000/RPMCycleTime);
+			printf("\n");
+			i=0;
+		}
 		Timer0_Wait(10);
 		i++ ;
 	}

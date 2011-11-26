@@ -17,7 +17,7 @@
 /// maximum number of receiver channel to read from sum signal
 #define MAX_CHANNELS 12
 
-#define TRIG_PIN (1<<20)
+#define TRIG_PIN (1<<23)
 #define TRIG_PORT 1
 
 /// receiver signal pulse lenght array
