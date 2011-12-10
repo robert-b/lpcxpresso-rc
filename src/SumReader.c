@@ -13,8 +13,6 @@
 #include "SumReader.h"
 
 uint32_t volatile Timer1Capture0Value;		///< stores Timer1 value at each capture 0 event
-//uint32_t volatile Timer1Capture1Value;		///< stores Timer1 value at each capture 1 event
-//uint32_t volatile RPMCycleTime;				///< stores captured cycle time in us for RPM measurement
 volatile struct RecvSignal_t Recv;
 uint32_t volatile tim_cr0_int_error;
 
@@ -23,7 +21,7 @@ uint32_t volatile tim_cr0_int_error;
 /// @param[in]	None
 /// @return 	None
 ///////////////////////////////////////////////////////////////////////////////
-void TIMER1_IRQHandler(void)
+void TIMER1_IRQHandler1(void)
 {
 //	if (TIM_GetIntCaptureStatus(LPC_TIM1,0))
 //	{
@@ -48,12 +46,6 @@ void TIMER1_IRQHandler(void)
 		}
 		Timer1Capture0Value = capt;
 	}
-//	else if(TIM_GetIntStatus(LPC_TIM1, TIM_CR1_INT)) {
-//		TIM_ClearIntPending(LPC_TIM1, TIM_CR1_INT);
-//		uint32_t capt = TIM_GetCaptureValue(LPC_TIM1,1);
-//		RPMCycleTime = capt - Timer1Capture1Value;
-//		Timer1Capture1Value = capt;
-//	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -68,6 +60,13 @@ void initSumReader(void)
 {
 	Recv.index = 0;
 	tim_cr0_int_error = 0;
+
+//	GPIO_SetDir(TRIG_PORT, TRIG_PIN, 1);	// Trigger signal for oscilloscope
+//	GPIO_SetDir(TRIG_PORT, TRIG_PIN1, 1);	// Trigger signal for oscilloscope
+//	GPIO_SetDir(TRIG_PORT, TRIG_PIN2, 1);	// Trigger signal for oscilloscope
+//	GPIO_ClearValue(TRIG_PORT, TRIG_PIN);
+//	GPIO_ClearValue(TRIG_PORT, TRIG_PIN1);
+//	GPIO_ClearValue(TRIG_PORT, TRIG_PIN2);
 
 	//Config P1.18 as CAP1.0 | LPC1769 (LQFP100) Pin 32 | LPCXpresso PAD1 (not linked to base board)
 	PINSEL_CFG_Type PinCfg;

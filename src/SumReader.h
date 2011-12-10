@@ -18,6 +18,8 @@
 #define MAX_CHANNELS 12
 
 #define TRIG_PIN (1<<23)
+#define TRIG_PIN1 (1<<26)
+#define TRIG_PIN2 (1<<29)
 #define TRIG_PORT 1
 
 /// receiver signal pulse lenght array
