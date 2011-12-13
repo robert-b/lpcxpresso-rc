@@ -55,6 +55,7 @@ __CRP const unsigned int CRP_WORD = CRP_NO_CRP ;
 #include "ServoCtrl.h"
 //#include "RPMReader.h"
 #include "SumRPMReader.h"
+#include "DOGSdisplay.h"
 
 // other definitions and declarations
 #define LED (1<<22)
@@ -63,14 +64,22 @@ extern uint32_t volatile RPMCycleTime;				///< stores captured cycle time in us 
 ///////////////////////////////////////////////////////////////////////////////
 /// @brief		the main program.
 ///////////////////////////////////////////////////////////////////////////////
-int main(void) {
-	
+int main(void)
+{
 	GPIO_SetDir(0, LED, 1);			// LEDs on PORT0 defined as Output
 
     initServoCtrl();
 //    initSumReader();
     //    initRPMReader();
     initSumRPMReader();
+    initDogs();
+
+	lcd_string(0,5,"    RC-ECU   ", ptr_font_8x16, DELETE); //Printing a line in big fonts, inverted
+	lcd_string(0,5 + pgm_read_byte(ptr_font_8x16 + 5), "RC-Engine Control", ptr_font_6x8, DELETE); //Printing next line small fonts, normal
+
+	Timer0_Wait(3000);
+
+	lcd_clear_all();
 
     // define servo outputs
     struct Servo_t servoSpec = {1,20,1500};  	/// Servo channel 1 on P1[20]
@@ -89,6 +98,10 @@ int main(void) {
 		// mix servo channels to show some action
 		ServoArray.channel[0].pulseLength = (Recv.channel[0] + Recv.channel[1]) / 2;
 		ServoArray.channel[1].pulseLength = (Recv.channel[2] + Recv.channel[3]) / 2;
+		char buf[10];
+		sprintf(buf, "%5d", ServoArray.channel[0].pulseLength);
+		lcd_string(0,8, buf, ptr_font_6x8, DELETE);
+
 
 //		if(i==500) {
 //			int j;
