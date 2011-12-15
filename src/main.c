@@ -61,6 +61,23 @@ __CRP const unsigned int CRP_WORD = CRP_NO_CRP ;
 #define LED (1<<22)
 extern uint32_t volatile RPMCycleTime;				///< stores captured cycle time in us for RPM measurement
 
+
+void printRecvChannels(int y)
+{
+	char buf[10];
+	int i,j;
+	int rows = MAX_CHANNELS/3;
+	int columns = MAX_CHANNELS/4;
+	for(i=0; i<columns; i++)  {
+		for(j=0; j<rows; j++) {
+			if(j*columns+i<MAX_CHANNELS) {
+				sprintf(buf, "%5d", Recv.channel[j*columns+i]);
+				lcd_string(1+i*5*6,y+1+j*9, buf, ptr_font_6x8, DELETE);
+			}
+		}
+	}
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 /// @brief		the main program.
 ///////////////////////////////////////////////////////////////////////////////
@@ -74,10 +91,10 @@ int main(void)
     initSumRPMReader();
     initDogs();
 
-	lcd_string(0,5,"    RC-ECU   ", ptr_font_8x16, DELETE); //Printing a line in big fonts, inverted
+	lcd_string(0,5,"   RC-ECU", ptr_font_8x16, DELETE); //Printing a line in big fonts, inverted
 	lcd_string(0,5 + pgm_read_byte(ptr_font_8x16 + 5), "RC-Engine Control", ptr_font_6x8, DELETE); //Printing next line small fonts, normal
 
-	Timer0_Wait(3000);
+	Timer0_Wait(10000);
 
 	lcd_clear_all();
 
@@ -86,6 +103,8 @@ int main(void)
     setServo(1, servoSpec);
     servoSpec.bit = 21;  						/// Servo channel 2 on P1[21]
     setServo(2, servoSpec);
+
+	lcd_string(0,5," RX-Channels", ptr_font_8x16, DELETE); //Printing a line in big fonts, inverted
 
     // Enter an infinite loop
     static volatile int i = 0 ;
@@ -98,10 +117,8 @@ int main(void)
 		// mix servo channels to show some action
 		ServoArray.channel[0].pulseLength = (Recv.channel[0] + Recv.channel[1]) / 2;
 		ServoArray.channel[1].pulseLength = (Recv.channel[2] + Recv.channel[3]) / 2;
-		char buf[10];
-		sprintf(buf, "%5d", ServoArray.channel[0].pulseLength);
-		lcd_string(0,8, buf, ptr_font_6x8, DELETE);
 
+		printRecvChannels(5 + pgm_read_byte(ptr_font_8x16 + 5));
 
 //		if(i==500) {
 //			int j;
