@@ -19,3 +19,6 @@ History
 
 27.11.2011
 	- added RPM module
+	
+10.12.2011
+	- added LCD driver for EA DOG-S 102x64
