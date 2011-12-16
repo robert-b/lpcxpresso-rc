@@ -19,11 +19,10 @@
 ///
 /// \file DOGSdisplay.c
 /// \brief
-/// enter brief description of DOGSdisplay.c here
+/// LCD driver module for EA DOG-S 102x64
 /// \date 10.12.2011
 /// \author cord
 /// \details
-/// enter detailed description here
 
 #include "lpc17xx_pinsel.h"
 #include "lpc17xx_gpio.h"
@@ -42,10 +41,10 @@ void initDogs(void)
 
 	/*
 	 * Initialize SPI pin connect
-	 * P0.7 - SCK;
-	 * P0.8 - MISO
-	 * P0.9 - MOSI
+	 * P0.7 - SCK1 — Serial Clock for SSP1
+	 * P0.9 - MOSI1 — Master Out Slave In for SSP1
 	 * P0.6 - SSEL - used as GPIO
+	 * P0.2 - CD
 	 */
 	PinCfg.Funcnum = 2;
 	PinCfg.OpenDrain = 0;
@@ -53,8 +52,8 @@ void initDogs(void)
 	PinCfg.Portnum = 0;
 	PinCfg.Pinnum = 7;
 	PINSEL_ConfigPin(&PinCfg);
-	PinCfg.Pinnum = 8;
-	PINSEL_ConfigPin(&PinCfg);
+//	PinCfg.Pinnum = 8;
+//	PINSEL_ConfigPin(&PinCfg);
 	PinCfg.Pinnum = 9;
 	PINSEL_ConfigPin(&PinCfg);
 //	PinCfg.Funcnum = 0;

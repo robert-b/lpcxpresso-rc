@@ -19,11 +19,16 @@
 ///
 /// \file DOGSdisplay.h
 /// \brief
-/// enter brief description of DOGSdisplay.h here
+/// LCD driver module for EA DOG-S 102x64
 /// \date 10.12.2011
 /// \author cord
 /// \details
-/// enter detailed description here10.12.2011
+/// Implements a SSP interface using following pins:
+///	 * P0.6 - SSEL - used as GPIO
+///	 * P0.7 - SCK
+///	 * P0.9 - MOSI
+///	 * P0.2 - CD
+
 
 #ifndef DOGSDISPLAY_H_
 #define DOGSDISPLAY_H_

@@ -19,11 +19,12 @@
 ///
 /// \file SumRPMReader.h
 /// \brief
-/// enter brief description of SumRPMReader.h here
+/// Combined sum signal and engine RPM reader module
 /// \date 10.12.2011
 /// \author cord
 /// \details
-/// enter detailed description here10.12.2011
+/// - read Graupner HoTT SUM signal, connect SUM signal to P1[18]
+/// - read RPM sensor signal, connect RPM signal to P1[19]
 
 #ifndef SUMRPMREADER_H_
 #define SUMRPMREADER_H_

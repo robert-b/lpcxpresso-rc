@@ -20,9 +20,22 @@
 ///
 /// Project description
 ///
-/// Example: Read Graupner HoTT SUM signal and attach LED to channel 1
+/// Features
 ///
-/// <img src="tekway45_6.gif" alt="Screenshot">
+///  - read receiver sum signal, e.g. for *Graupner HoTT* system
+///  - drive multiple (up to 8) servos
+///  - read RPM
+///  - drive LCD (Electronic Assembly DOGS 102x64)
+/// .
+/// Planned features
+///
+///  - drive up to 24 servos
+///  - read sensors signals
+///    - temperature
+///    - others
+///  - telemetry
+/// .
+/// <img src="dogs102x64_small.jpg" alt="LCD"> <img src="rc-ecu.jpg" alt="RC-ECU">
 ///
 /// @author Cord Johannmeyer
 
@@ -86,8 +99,6 @@ int main(void)
 	GPIO_SetDir(0, LED, 1);			// LEDs on PORT0 defined as Output
 
     initServoCtrl();
-//    initSumReader();
-    //    initRPMReader();
     initSumRPMReader();
     initDogs();
 

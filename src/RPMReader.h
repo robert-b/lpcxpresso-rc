@@ -19,11 +19,11 @@
 ///
 /// \file RPMReader.h
 /// \brief
-/// enter brief description of RPMReader.h here
+/// Engine RPM reader module
 /// \date 25.11.2011
 /// \author cord
 /// \details
-/// enter detailed description here25.11.2011
+/// - read RPM sensor signal, connect RPM signal to P0[23]
 
 #ifndef RPMREADER_H_
 #define RPMREADER_H_
